@@ -1,62 +1,33 @@
 package tests;
 
-
+import config.BaseAuthTest;
+import jdk.jfr.Description;
 import methods.LoginClient;
-import methods.UserClient;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import pojo.Login;
-import pojo.User;
+
 import static org.hamcrest.Matchers.*;
+import static org.apache.http.HttpStatus.*;
 
 
-public class LoginUserTest {
-    private UserClient userClient;
+public class LoginUserTest extends BaseAuthTest {
+
     private LoginClient loginClient;
-
-    private String accessToken;
-    private String email;
-    private String password;
-    private String name;
 
     @Before
     public void setup() {
-        userClient = new UserClient();
         loginClient = new LoginClient();
-        accessToken = null;
-
-        email = "yuliasev" + System.currentTimeMillis() + "@yandex.ru";
-        password = "12345678";
-        name = "Yuliasev";
-
-        User user = new User(email, password, name);
-        accessToken = userClient.create(user)
-                .then()
-                .statusCode(200)
-                .body("success", is(true))
-                .extract()
-                .path("accessToken");
     }
 
-    @After
-    public void tearDown() {
-        if (accessToken != null) {
-            userClient.delete(accessToken)
-                    .then()
-                    .statusCode(202)
-                    .body("success", is(true))
-                    .body("message", equalTo("User successfully removed"));
-        }
-    }
-
+    @Description("Успешная авторизация")
     @Test
-    public void loginWithSuccess() {
+    public void loginWithSuccessTest() {
         Login login = new Login(email, password);
 
         loginClient.login(login)
                 .then()
-                .statusCode(200)
+                .statusCode(SC_OK)
                 .body("success", is(true))
                 .body("accessToken", notNullValue())
                 .body("refreshToken", notNullValue())
@@ -64,24 +35,26 @@ public class LoginUserTest {
                 .body("user.name", equalTo(name));
     }
 
+    @Description("Попытка авторизации с неверным паролем")
     @Test
-    public void loginWithWrongPassword() {
+    public void loginWithWrongPasswordTest() {
         Login login = new Login(email, "wrong");
 
         loginClient.login(login)
                 .then()
-                .statusCode(401)
+                .statusCode(SC_UNAUTHORIZED)
                 .body("success", is(false))
                 .body("message", equalTo("email or password are incorrect"));
     }
 
+    @Description("Попытка авторизации с неверным email")
     @Test
-    public void loginWithWrongEmail() {
+    public void loginWithWrongEmailTest() {
         Login login = new Login("yulia@yandex.ru", "12345678");
 
         loginClient.login(login)
                 .then()
-                .statusCode(401)
+                .statusCode(SC_UNAUTHORIZED)
                 .body("success", is(false))
                 .body("message", equalTo("email or password are incorrect"));
     }

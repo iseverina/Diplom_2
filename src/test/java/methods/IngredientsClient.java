@@ -22,10 +22,10 @@ public class IngredientsClient {
     public String[] getIngredientIds() {
         Response response = getIngredients();
 
-        String id1 = response.then().extract().path("data[0]._id");
-        String id2 = response.then().extract().path("data[1]._id");
+        String idOne = response.then().extract().path("data[0]._id");
+        String idTwo = response.then().extract().path("data[1]._id");
 
-        return new String[]{id1, id2};
+        return new String[]{idOne, idTwo};
 
     }
 
